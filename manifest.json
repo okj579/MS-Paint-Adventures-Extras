@@ -1,6 +1,6 @@
 {
 	"name": "MS Paint Adventure Extras",
-	"version": "1.0",
+	"version": "1.0.1",
 	"description": "Adds keyboard shortcuts, theater mode and TTS to MS Paint Adventures.",
 	"icons": { "16": "icons/16.png",
            "48": "icons/48.png",

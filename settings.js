@@ -1,7 +1,8 @@
 function Settings() {
 	this.keys = {
 		next: 39, //Right arrow
-		back: 37 //Left arrow
+		back: 37, //Left arrow
+		silence: 83 //Silence
 	}
 	this.tts = {
 		enabled: true,
