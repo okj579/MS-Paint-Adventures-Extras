@@ -1,0 +1,24 @@
+<script src="jquery.js"></script>
+<script src="settings.js"></script>
+<script>
+	chrome.extension.onRequest.addListener(
+		function(request, sender, sendResponse) {
+		
+			if(request.action=="say") {
+				var options = settings.tts.options || {};
+				chrome.tts.speak(request.text,options,function(){
+					if(chrome.extention.lastError) {
+						sendResponse(chrome.extention.lastError);
+					}
+				});
+				
+			} else if(request.action=="stopSpeech") {
+				chrome.tts.stop();
+				
+			} else if(request.action=="getSettings") {
+				sendResponse(settings);
+			}
+			
+		}
+	);
+</script>
