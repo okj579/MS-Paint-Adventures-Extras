@@ -78,7 +78,7 @@ window.location.search_object = (function(search_string){
 			var comic_parts = $('table table table table',comic_section),
 				comic_title = $(comic_parts[0]),
 				comic_caption = $(comic_parts[1]);
-				comic_controls = $(comic_parts[3]);
+				comic_controls = comic_parts.last();
 			$(':button',comic_caption).remove();
 			$('.spoiler',comic_caption).show();
 			$('a:first',comic_controls).click(function(){
