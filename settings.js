@@ -40,11 +40,15 @@ function saveSettings(settings) {
 }
 
 function getSettings() {
-	var defaults = new Settings(),
-		settings = JSON.parse(localStorage['settings'] || false);
-	$.extend(true, defaults, settings);
-	if(settings.tts.series) defaults.tts.series = settings.tts.series
-	return defaults;
+	try {
+		var defaults = new Settings(),
+			settings = JSON.parse(localStorage['settings'] || false);
+		$.extend(true, defaults, settings);
+		if(settings.tts && settings.tts.series) defaults.tts.series = settings.tts.series
+		return defaults;
+	} catch(e) {
+		return new Settings();
+	}
 }
 
 settings = getSettings();
