@@ -20,7 +20,9 @@ window.location.search_object = (function(search_string){
 		
 
 	function speak(text) {
-		chrome.extension.sendRequest({action:"say", text:text}, function(e){
+		text = text.toLowerCase().replace(/^\s*|\s*$|==>/g,'').replace(/\s+/g,' ');
+		if(text==' ') return;
+		chrome.extension.sendRequest({action:"say", text:text, series:series}, function(e){
 			console.log('TTS Error: '+e);
 			$('body').append(
 				'<div style="position:fixed;bottom:0;left:0;width:100%;text-align:center;background-color:salmon;padding:2px;">' +
@@ -37,6 +39,10 @@ window.location.search_object = (function(search_string){
 			page_trs = $('body > center > table > tbody > tr'),
 			comic_section = $(page_trs[1]),
 			banners = $([page_trs[0],page_trs[4]]);
+			
+		if(window.location.search_object.p === undefined) { //For first pages
+			page = parseInt($('a:last',comic_section).attr('href').slice(-6),10);
+		}
 
 		function pad6(n) { return ('00000'+n).slice(-6); }
 		function nav(offset) {
@@ -97,9 +103,11 @@ window.location.search_object = (function(search_string){
 			});
 			
 			if(settings.tts.enabled) {
-				if(settings.tts.title) speak($(comic_parts[0]).text().toLowerCase().replace('==>',''));
-				if(settings.tts.caption) speak(comic_caption.text().toLowerCase());
-				if(settings.tts.action) speak($('a:first',comic_controls).text().toLowerCase().replace('==>',''));
+				if(settings.tts.title) speak($(comic_parts[0]).text());
+				if(settings.tts.caption) $('p,span',comic_caption).not(':has(p,span)').each(function(i,span){
+					speak($(span).text());
+				});
+				if(settings.tts.action) speak($('a:first',comic_controls).text());
 			}
 		}
 		

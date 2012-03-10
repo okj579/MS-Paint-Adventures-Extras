@@ -7,6 +7,7 @@
 	<script>
 		$(function(){
 			function update() {
+			console.log('update');
 				settings.keys.next = $('#key-next').val();
 				settings.keys.back = $('#key-back').val();
 				settings.keys.silence = $('#key-silence').val();
@@ -16,11 +17,69 @@
 				settings.tts.caption = $('#tts-caption').is(':checked');
 				settings.tts.action = $('#tts-action').is(':checked');
 				settings.tts.options.rate = parseFloat($('#tts-rate').val(),10);
+				settings.tts.options.pitch = parseFloat($('#tts-pitch').val(),10);
 				settings.tts.options.voiceName = $('#tts-voice').val();
+				
+				settings.tts.series = {};
+				$('#characters tr').each(function(i, row){
+					var series = parseInt($('.field-series select',row).val(), 10),
+						abbr = $('.field-abbr input',row).val(),
+						name = $('.field-name input',row).val(),
+						voiceName = $('.field-voiceName select',row).val(),
+						pitch = $('.field-pitch input',row).val(),
+						rate = $('.field-rate input',row).val();
+					if(series && abbr) {
+						settings.tts.series[series] = settings.tts.series[series] || {};
+						settings.tts.series[series][abbr] = {name: name};
+						if(voiceName) settings.tts.series[series][abbr].voiceName = voiceName;
+						if(pitch) settings.tts.series[series][abbr].pitch = parseFloat(pitch,10);
+						if(rate) settings.tts.series[series][abbr].rate = parseFloat(rate,10);
+					}
+				});
 				saveSettings(settings);
 			}
-			$('input').bind('input',update);
-			$('input,select').change(update);
+			
+			function addCharacter(series, abbr, name, voiceName, pitch, rate) {
+				$('#characters').append( $(document.createElement('tr') )
+					.append( $(document.createElement('td')) .addClass('field-series')
+						.append( $(document.createElement('select'))
+							.append( $(document.createElement('option')).val(6).text('Homestuck'))
+							.append( $(document.createElement('option')).val(4).text('Problem Sleuth'))
+							.append( $(document.createElement('option')).val(2).text('Bard Quest'))
+							.append( $(document.createElement('option')).val(1).text('Jailbreak'))							 
+							.val(series || '')
+						)
+					)
+					.append( $(document.createElement('td')) .addClass('field-abbr')
+						.append( $(document.createElement('input')) .val(abbr || '') )
+					)
+					.append( $(document.createElement('td')) .addClass('field-name')
+						.append( $(document.createElement('input')) .val(name || '') )
+					)
+					.append( $(document.createElement('td')) .addClass('field-voiceName')
+						.append( $('#tts-voice').clone() .val(voiceName || '') )
+					)
+					.append( $(document.createElement('td')) .addClass('field-pitch')
+						.append( $(document.createElement('input')) .val(pitch || '')
+							.attr('type','number') .attr('min','0') .attr('max','2') .attr('step','.1')
+						)
+					)
+					.append( $(document.createElement('td')) .addClass('field-rate')
+						.append( $(document.createElement('input')) .val(rate || '') 
+							.attr('type','number') .attr('min','.1') .attr('max','10') .attr('step','.1')
+						)
+					)
+					.append( $(document.createElement('td')) .addClass('delete-row')
+						.append(
+							$(document.createElement('a')) .addClass() .text('Delete')
+							.click(function(){ $(this).closest('tr').remove(); update(); })
+						)
+					)
+				);
+			}
+			
+			$('input').live('input',update);
+			$('input,select').live('change',update);
 			
 			$('#key-next').val(settings.keys.next);
 			$('#key-back').val(settings.keys.back);
@@ -31,6 +90,7 @@
 			if(settings.tts.caption) $('#tts-caption').attr('checked','checked');
 			if(settings.tts.action) $('#tts-action').attr('checked','checked');
 			$('#tts-rate').val(settings.tts.options.rate);
+			$('#tts-pitch').val(settings.tts.options.pitch);
 			chrome.tts.getVoices(function(voices){
 				for(i in voices) {
 					$('#tts-voice').append('<option>');
@@ -39,13 +99,30 @@
 					if(settings.tts.options.voiceName==voices[i].voiceName) $('#tts-voice option:last').attr('selected','selected');
 				}
 				if(!voices.length) $('#noVoicesWarning').show();
+				
+				// Populate Character Voices
+				var s, abbr;
+				for(s in settings.tts.series) {
+					for(abbr in settings.tts.series[s]) {
+						addCharacter(s,
+									 abbr,
+									 settings.tts.series[s][abbr].name,
+									 settings.tts.series[s][abbr].voiceName,
+									 settings.tts.series[s][abbr].pitch,
+									 settings.tts.series[s][abbr].rate
+									);
+					}
+				}
+				
+				update();
 			});
+			
+			
 			$('.keycode').keydown(function(e){
 				this.value = e.which;
 				update();
 				return false;
 			});
-			update();
 		});
 	</script>
 	<style>
@@ -56,6 +133,9 @@
 			display: none;
 		}
 		#author { text-align: right; }
+		#characters .field-series input { width: 2em; }
+		#characters .delete-row a { color: red; text-decoration: underline; cursor: pointer; }
+		#character-table, #add-character { padding-left: 10px; }
 	</style>
 </head>
 <body>
@@ -68,6 +148,7 @@
 	<label for="key-silence">Silence</label> <input id="key-silence" class="keycode"> <i>Default: S</i><br>
 
 	<h3>TTS Settings</h3>
+	<div id="noVoicesWarning">Warning: You have no voices installed. TTS will not work.</div>
 	<input type="checkbox" id="tts"/> <label for="tts">Enable text-to-speech</label><br>
 	Read:<br>
 	<div style="padding-left:15px;">
@@ -75,17 +156,37 @@
 		<input type="checkbox" id="tts-caption"/> <label for="tts-caption">Caption</label><br>
 		<input type="checkbox" id="tts-action"/> <label for="tts-action">Next Action</label><br>
 	</div>
-	<label for="tts-rate">Speech rate</label> <input type="number" min=".1" max="10" step=".1" id="tts-rate"/><br>
-	<label for="tts-voice">Voice</label>
+	<label for="tts-voice">Default Voice</label>
 	<select id="tts-voice">
 		<option value="">Default</option>	
 	</select>
 	<a href="https://chrome.google.com/webstore/category/extensions" target="_blank">Get More</a><br>
-	<div id="noVoicesWarning">Warning: You have no voices installed. TTS will not work.</div>
+	<label for="tts-rate">Speech rate</label> <input type="number" min=".1" max="10" step=".1" id="tts-rate"/><br>
+	<label for="tts-pitch">Pitch</label> <input type="number" min="0" max="2" step=".1" id="tts-pitch"/><br>
+
+	
+	<h4>Character Voices</h4>
+	<table id="character-table">
+		<thead><tr>
+			<th title="Homestuck, Problem Sleuth, etc.">Series (?)</th>
+			<th title="Lines starting with '<abbr>: ' will be read in this style.">Abbreviation (?)</th>
+			<th title="What you want read instead of the abbreviation. e.g 'John', 'Ecto-biologist', 'E.B.', or leave blank.">Phonetic (?)</th>
+			<th>Voice</th>
+			<th title="Number 0-2 (default 1). Leave blank for global setting. May not work with all voices.">Pitch (?)</th>
+			<th title="Number 0.1-10 (default 1). Leave blank for global setting. May not work with all voices.">Speed (?)</th>
+			<th></th>
+		</tr></thead>
+		<tbody id="characters"></tbody>
+	</table>
+	<a href="javascript:addCharacter()" id="add-character">+ Add</a>
+	<a href="javascript:delete settings.tts.series;saveSettings(settings);location.reload(true);" id="default-characters">Defaults</a>
+	<a href="javascript:settings.tts.series = {};saveSettings(settings);location.reload(true);" id="default-characters">Remove All</a>
+
 	
 	<div id="author">
 		Author: <a href="http://www.kiefferjoneswebdesign.com/">Owen Kieffer-Jones</a><br>
-		Licensed under the <a href="LICENSE.txt">MIT License</a>. (<a href="http://github.com/okj579/MS-Paint-Adventures-Extras">Source</a>)
+		<a href="http://www.kiefferjoneswebdesign.com/blog/2012/03/09/chrome-extension-ms-paint-adventures-extras/">Project page</a> | <a href="http://github.com/okj579/MS-Paint-Adventures-Extras">Source code</a><br>
+		Licensed under the <a href="LICENSE.txt">MIT License</a>.
 	</div>
 </body>
 </html>

@@ -11,7 +11,25 @@ function Settings() {
 		action: false,
 		options: {
 			rate: 1,
+			pitch: 1,
 			enqueue: true
+		},
+		series: {
+			6: {
+				"EB": { name: "Ecto-biologist" },
+				"TT": { name: "Tentacle Therapist" },
+				"TG": { name: "Turn-tech God-head" },
+				"GG": { name: "Garden Gnostic" },
+				"CG": { name: "Carcino-geneticist" },
+				"GT": { name: "Ghosty Trickster" },
+				"GA": { name: "Grim Auxiliatrix" },
+				"AT": { name: "Adios Toreador" },
+				"GC": { name: "Gallows Calibrator" },
+				"TA": { name: "Twin Armageddons" },
+				"WV": { name: "Wayward Vagabond" },
+				"NANNASPRITE": { name: "Nanna Sprite" },
+				"JOHN": { name: "John" }
+			}
 		}
 	}
 }
@@ -22,9 +40,11 @@ function saveSettings(settings) {
 }
 
 function getSettings() {
-	var settings = new Settings();
-	$.extend(true, settings, JSON.parse(localStorage['settings'] || false));
-	return settings;
+	var defaults = new Settings(),
+		settings = JSON.parse(localStorage['settings'] || false);
+	$.extend(true, defaults, settings);
+	if(settings.tts.series) defaults.tts.series = settings.tts.series
+	return defaults;
 }
 
 settings = getSettings();
