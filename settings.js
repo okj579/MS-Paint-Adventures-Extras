@@ -36,7 +36,11 @@ function Settings() {
 
 function saveSettings(settings) {
 	localStorage['settings'] = JSON.stringify(settings);
-	chrome.extension.sendRequest({action:"updateSettings",settings:settings});
+	chrome.tabs.query({url:"http://www.mspaintadventures.com/*"},function(tabs){
+		for(i in tabs) {
+			chrome.tabs.sendRequest(tabs[i].id, {action:"updateSettings",settings:settings});
+		}
+	});
 }
 
 function getSettings() {

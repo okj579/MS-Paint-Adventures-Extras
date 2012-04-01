@@ -1,6 +1,6 @@
 {
 	"name": "MS Paint Adventure Extras",
-	"version": "2.1",
+	"version": "2.2",
 	"description": "Adds keyboard shortcuts, theater mode and TTS to MS Paint Adventures.",
 	"icons": {
 		"16": "icons/16.png",
@@ -18,7 +18,7 @@
 	"permissions": [
 		"http://www.mspaintadventures.com/",
 		"tts",
-		"cookies"
+		"tabs"
 	],
 	"update_url": "http://www.kiefferjoneswebdesign.com/chrome/MSPA.xml"
 }
