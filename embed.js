@@ -44,8 +44,8 @@ $(function(){
 		page += offset;
 		$.get('/', {s:series, p:pad6(page)}, function(data) {
 			new_comic = data.slice(
-				data.indexOf('<!------------------------begin comic content----------------------------------->'),
-				data.indexOf('<!------------------------end comic content----------------------------------->')
+				data.indexOf('<!-- begin comic content -->'),
+				data.indexOf('<!-- end comic content -->')
 			);
 			new_comic = new_comic.replace(/<script.*<\/script>/g,'');
 			new_comic = new_comic.replace('<noscript>','');
@@ -57,7 +57,8 @@ $(function(){
 	}
 	$(window).bind('popstate',function(){
 		parseQuery();
-		nav(parseInt(window.location.search_object.p,10) - page, true);
+		var offset = parseInt(window.location.search_object.p,10) - page;
+		if(offset !== 0) nav(offset, true);
 	});
 
 	$(document).keydown(function(e){
@@ -110,18 +111,42 @@ $(function(){
 	
 	$('b',banners).append(' &nbsp; <img src="images/candycorn.gif" border="0" align="absmiddle"> &nbsp; <a href="'+chrome.extension.getURL('options.html')+'" target="_blank" style="color:white">EXTRAS OPTIONS</a>');
 	$('b',banners).append(' | <a href="#" id="theater-mode" style="color:white">THEATER MODE</a>');
+	$('b',banners).append(' | <div class="sound"></div>');
 	$('#theater-mode').click(function(){
 		toggleTheater();
 		localStorage['theater-mode'] = !isTheater();
 	});
+	$('.sound').click(function(){
+		chrome.extension.sendRequest({action:"toggleSound"});
+	});
+	$('head').append(
+		"<style>"+
+		".sound {"+
+			"background-image: url('"+chrome.extension.getURL('sound_icon.png')+"');"+
+			"width:16px; height:16px;"+
+			"display: inline-block;"+
+			"vertical-align: bottom;"+
+			"cursor: pointer; }"+
+		".sound.on{ background-position: 16px; }"+
+		"</style>"
+	);
 	if(localStorage['theater-mode'] === 'true') { toggleTheater(); }
 	
 	chrome.extension.sendRequest({action:"getSettings"}, function(resp) {
 		settings = resp;
+		if(settings.tts.enabled) $('.sound').addClass('on');
 		afterLoad();
 	});
 	chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
-		if(request.action=='updateSettings') settings = request.settings;
+		if(request.action=='updateSettings') {
+			settings = request.settings;
+			
+			if(settings.tts.enabled) {
+				$('.sound').addClass('on');
+			} else {
+				$('.sound').removeClass('on');
+			}
+		}
 	});
 
 });
